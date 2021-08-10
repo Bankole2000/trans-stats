@@ -15,7 +15,6 @@ module.exports.createTransaction = async (req, res) => {
   }
 
   if (((Date.now() - Date.parse(timestamp)) / 1000) > DEFAULT_EXPIRATION) {
-    // console.log(Math.floor((Date.now() - Date.parse(timestamp)) / 1000));
     // persist to more permanent storage if available
     return res.status(204).json({});
   }
@@ -23,8 +22,6 @@ module.exports.createTransaction = async (req, res) => {
 
   if (redisClient.exists('transactions')) {
     redisClient.get('transactions', (error, data) => {
-      // console.log('creating');
-      // console.log({ data, error });
       if (!error) {
         transactions = JSON.parse(data ? data : "[]");
         recentTransactions = transactions.filter((trans) => Date.parse(trans.timestamp) > (Date.now() - (1000 * DEFAULT_EXPIRATION)));
@@ -37,18 +34,18 @@ module.exports.createTransaction = async (req, res) => {
           min: Math.min(...transAmounts),
           count: transAmounts.length,
         }
-        // console.log({ transAmounts, recentTransactions, statistics, line: '42' });
+
         redisClient.setex('transactions', DEFAULT_EXPIRATION, JSON.stringify(recentTransactions));
         redisClient.setex('statistics', DEFAULT_EXPIRATION, JSON.stringify(statistics));
         return res.status(200).json({ success: true, message: "New transaction created", data: { amount, timestamp } });
       }
       if (error) {
-        // console.log(error);
+
         return res.status(500).json({ success: false, message: "Server Error", error })
       }
     })
   } else {
-    // console.log("Doen't exist");
+
     transactions = [];
     transactions.push({ amount, timestamp });
     const transAmounts = transactions.map(trans => trans.amount)
@@ -59,7 +56,7 @@ module.exports.createTransaction = async (req, res) => {
       min: Math.min(...transAmounts),
       count: transAmounts.length,
     }
-    // console.log({ transactions, statistics });
+
     redisClient.setex('transactions', DEFAULT_EXPIRATION, JSON.stringify(transactions));
     redisClient.setex('statistics', DEFAULT_EXPIRATION, JSON.stringify(statistics));
     return res.status(200).json({ success: true, message: "New transaction created", data: { amount, timestamp } });
