@@ -84,4 +84,7 @@ redis-server
 npm run dev
 ```
 
+#### Rate Limit
+There's a rate limit of **120 POST requests/min** to the `/transaction` endpoint from the same IP address 
+
 The application listens on port 3000 by default.
